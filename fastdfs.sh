@@ -3,7 +3,8 @@
 
 if [ ! -f /temp/fdfs/firstsetup ];then
     #new_val=$FASTDFS_IPADDR
-    #old="com.ikingtech.ch116221"
+    #old="com.ikingtech.ch116221
+    
 
     sed -i "s/<old_TRACKER_IP_FOR_CLIENT>/$TRACKER_IP/g" /temp/fdfs/client.conf
     sed -i "s/<old_TRACKER_PORT_FOR_CLIENT>/$TRACKER_PORT/g" /temp/fdfs/client.conf
@@ -12,6 +13,8 @@ if [ ! -f /temp/fdfs/firstsetup ];then
     sed -i "s/<old_TRACKER_PORT_FOR_STORAGE>/$TRACKER_PORT/g" /temp/fdfs/storage.conf
     sed -i "s/<old_STORAGE_PORT>/$STORAGE_PORT/g" /temp/fdfs/storage.conf
     sed -i "s/<old_NGINX_HTTP_PORT>/$NGINX_HTTP_PORT/g" /temp/fdfs/storage.conf   
+    [ x$GROUP_NAME = x ]&&GROUP_NAME=group1
+    sed -i "s/<old_GROUP_NAME>/$GROUP_NAME/g" /temp/fdfs/storage.conf
 
     sed -i "s/<old_TRACKER_IP_FOR_MOD>/$TRACKER_IP/g" /temp/fdfs/mod_fastdfs.conf
     sed -i "s/<old_TRACKER_PORT_FOR_MOD>/$TRACKER_PORT/g" /temp/fdfs/mod_fastdfs.conf
@@ -32,7 +35,7 @@ if [ ! -f /temp/fdfs/firstsetup ];then
     touch /temp/fdfs/firstsetup
 fi
 
-if [ x$NODETYPE = x ];then
+if [ x$STORAGE_FLAG = x -a x$TRACKER_FLAG = x ];then
     echo "start trackerd"
     /etc/init.d/fdfs_trackerd start
     echo Track ip:port: $TRACKER_IP:$TRACKER_PORT
@@ -44,10 +47,23 @@ if [ x$NODETYPE = x ];then
     echo "start nginx"
     /usr/local/nginx/sbin/nginx 
     echo Nginx ip:port: $TRACKER_IP:$NGINX_HTTP_PORT
-elif [ x$NODETYPE = xstorage ];then
+elif [ x$STORAGE_FLAG = xY -o x$STORAGE_FLAG = xy ] && [ x$TRACKER_FLAG = xY -o x$TRACKER_FLAG = xy ]
+then
+    echo "start trackerd"
+    /etc/init.d/fdfs_trackerd start
+    echo Track ip:port: $TRACKER_IP:$TRACKER_PORT
+
+    echo "start storage"
+    /etc/init.d/fdfs_storaged start
+    echo Storage ip:port: $TRACKER_IP:$STORAGE_PORT
+elif [ x$STORAGE_FLAG = xY -o x$STORAGE_FLAG = xy ];then
     echo "start storage"
     /etc/init.d/fdfs_storaged start
     echo Storage ip:port: Your host ip:$STORAGE_PORT
+elif [ x$TRACKER_FLAG = xY -o x$TRACKER_FLAG = xy ];then
+    echo "start tracker"
+    /etc/init.d/fdfs_trackerd start
+    echo Track ip:port: $TRACKER_IP:$TRACKER_PORT
 fi
 
 tail -f  /dev/null
